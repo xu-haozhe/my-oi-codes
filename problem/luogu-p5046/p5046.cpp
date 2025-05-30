@@ -94,13 +94,19 @@ inline ull get_ans(arriterid l,arriterid r)noexcept{
         if(arrl=bl->arrb)return (arrl-1)->pre;
         return (arrr-1)->pre - (arrl-1)->pre - get_merge_ans(bl,bl,arrl,arrl-1,arrr);
     }else{
-
+        ll res=0;
+        if(arrl!=bl->arrb&&arrr!=br->arrb)res+=get_merge_ans(bl,br,arrl,arrr-1);
+        if(arrl!=bl->arrb)res+=arrl->suf;else bl++;
+        if(arrr!=br->arrb)res+=(arrr-1)->pre;
+        res+=get_whole_block_ans((bl+1)->id,br->id);
     }
 }
 int main(){
     init();
     while(m--){
         int l,r;read(l,r),l^=lastans,r^=lastans,l--;
+        if(l>r)swap(l,r);
+        cout<<(lastans=get_ans(l,r));
     }
     return 0;
 }
