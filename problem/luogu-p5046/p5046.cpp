@@ -31,12 +31,12 @@ struct block{
     inline void intiarrptr()noexcept{
         siz=e-b,arrb=arr+b,arre=arr+e,sorta=arr_sort+b,sorte=arr_sort+e,sum=::sum+id;
     }
-    inline void init();
-}blocks[maxblocknum+10],*e_block;
+    inline void init()noexcept;
+}blocks[maxblocknum+10],*e_block,*p_arr_blocks[maxn+10];
 inline void block::init()noexcept{
     this->intiarrptr(),sort(sorta,sorte);
     using namespace fenwick;clear();
-    for(auto i=arrb;i!=arre;++i)i->pre=(num+=query((1<<17)-1)-query(i->v)),add(i->v,1);
+    for(auto i=arrb;i!=arre;++i)p_arr_blocks[i-arr]=this,i->pre=(num+=query((1<<17)-1)-query(i->v)),add(i->v,1);
     clear(),num=0;
     for(auto i=arre-1;i!=arrb-1;--i)i->suf=(num+=query(i->v-1)),add(i->v,1);
 }
@@ -75,38 +75,42 @@ namespace whole_block{
     __always_inline ull get_whole_block_ans(blockid b,blockid e)noexcept{return f[b][e];}
 };using whole_block::get_whole_block_ans;
 inline void init()noexcept{
-    read(n,m),block_siz=sqrt(n),block_num=(n+block_siz-1)/block_siz,e_block=blocks;
+    read(n,m),block_siz=sqrt(n),block_num=(n+block_siz-1)/block_siz,e_block=blocks+block_num;
     for(int i=0;i<n;i++)read(arr[i].v);
     for(int i=0;i<block_num-1;i++)blocks[i].id=i,blocks[i].e=blocks[i+1].b=blocks[i].b+block_siz;
-    (e_block-1)->id=block_num-1,e_block->e=n;
-    for(auto*i=blocks;i!=e_block;++i)i->init();
+    (e_block-1)->id=block_num-1,e_block->b=(e_block-1)->e=n,e_block->e=n+1;
+    for(auto*i=blocks;i!=e_block;++i)i->init();e_block->intiarrptr();p_arr_blocks[n]=e_block;
+    whole_block::init();
     static int a[maxn+10];
     for(auto*i=blocks;i!=e_block;++i){
         for(auto*j=i->arrb,*e=i->arre;j!=e;++j)++a[j->v];
-        auto&sum=*(i->sum+1);for(int j=1;j<n;j++)sum[j]=sum[j-1]+a[j];
+        auto&sum=*(i->sum+1);for(int j=1;j<=n;j++)sum[j]=sum[j-1]+a[j];
     }
 }
 inline ull get_ans(arriterid l,arriterid r)noexcept{
-    auto*bl=blocks+l/block_siz,*br=blocks+r/block_siz;
+    auto*bl=p_arr_blocks[l],*br=p_arr_blocks[r];
     auto*arrl=arr+l,*arrr=arr+r;
-    if(bl=br){
+    if(bl==br){
         if(arrl==arrr)return 0;
         if(arrl=bl->arrb)return (arrl-1)->pre;
         return (arrr-1)->pre - (arrl-1)->pre - get_merge_ans(bl,bl,arrl,arrl-1,arrr);
-    }else{
-        ll res=0;
-        if(arrl!=bl->arrb&&arrr!=br->arrb)res+=get_merge_ans(bl,br,arrl,arrr-1);
-        if(arrl!=bl->arrb)res+=arrl->suf;else bl++;
-        if(arrr!=br->arrb)res+=(arrr-1)->pre;
-        res+=get_whole_block_ans((bl+1)->id,br->id);
     }
+    ll res=0;
+    if(arrl!=bl->arrb&&arrr!=br->arrb)res+=get_merge_ans(bl,br,arrl,arrr-1);
+    res+=arrl->suf,res+=(arrr-1)->pre;
+    auto&suml=*(bl->sum),&sumr=*((br-1)->sum);
+    for(auto*i=arrl,*e=bl->arre;i!=e;++i)res+=sumr[i->v]-suml[i->v];
+    ll sumtmp=sumr[n]-suml[n];
+    for(auto*i=br->arrb;i!=arrr;++i)res+=sumtmp-(sumr[i->v]-suml[i->v]);
+    res+=get_whole_block_ans((bl+1)->id,br->id);
+    return res;
 }
 int main(){
     init();
     while(m--){
         int l,r;read(l,r),l^=lastans,r^=lastans,l--;
         if(l>r)swap(l,r);
-        cout<<(lastans=get_ans(l,r));
+        cout<<(lastans=get_ans(l,r))<<'\n';
     }
     return 0;
 }
