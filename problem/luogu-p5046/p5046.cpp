@@ -1,14 +1,21 @@
 #include <bits/stdc++.h>
 using namespace std;
-constexpr bool FORCE_ONLINE=false;
+constexpr bool FORCE_ONLINE=true;
 template<class T>inline void read_(T&t_)noexcept{
     unsigned char ch=getchar();T t=0;
     while(!isdigit(ch))ch=getchar();
-    while(isdigit(ch))t=t*10+ch-'0',ch=getchar();
+    while(isdigit(ch))t=t*10+(ch&0xf),ch=getchar();
     t_=t;[[assume(t_>=0)]];
 }
 __always_inline void read()noexcept{}
 template<class T,class ...Args>__always_inline void read(T&first,Args&...args)noexcept{read_(first);read(args...);}
+template<class T>inline void write_(T t_)noexcept{
+    [[assume(t_>=0)]];
+    if(t_==0)return (void)(putchar('0'),putchar('\n'));
+    static char str[100],*p;
+    for((p=str+64);t_;t_/=10)*(--p)=(t_%10)|'0';
+    for(;*p;++p)putchar(*p);putchar('\n');
+}
 using ll=long long;using ull=unsigned long long;
 using blockid=uint;using arrid=uint;
 constexpr ull hightbit(ull x)noexcept{return x?(1ull<<(63-__builtin_clzll(x))):(0);}
@@ -33,35 +40,38 @@ struct block{
 struct merge{
     alignas(512) static uint a[maxblocksize_pow2],b[maxblocksize_pow2];
     static inline uint calc()noexcept{
-        uint res=0,*ia=a,*ib=b;
+        uint res=0,*ia=a,*ib=b,cnt;
         while(*ia&&*ib)if(*ia<*ib)++ia,res+=ib-b;else ++ib;
-        return res;
+        for(cnt=0;*ia;++ia)++cnt;
+        return res+cnt*(ib-b);
     }
     static inline  uint calc(blockid a,blockid b)noexcept{
-        uint res;
-        for(auto*i=sort_arr[a],*j=sort_arr[b],*b=j;*(ull*)i&&*(ull*)j;)
-            if(i->v<j->v)++i,res+=j-b;else ++j;
-        return res;
+        uint res=0,cnt=0;auto*i=sort_arr[a],*j=sort_arr[b],*s=j;
+        while(*(ull*)i&&*(ull*)j)
+            if(i->v<j->v)++i,res+=j-s;else ++j;
+        for(cnt=0;*(ull*)i;++i)++cnt;
+        return res+ cnt*(j-s);
     }
 }merge_ans;alignas(512) uint merge::a[maxblocksize_pow2],merge::b[maxblocksize_pow2];
 inline ull get_ans()noexcept{
+    if(l+1==r)return 0;
     uint p_lblock=p_block[l],p_rblock=p_block[r];
     auto*lblock=blocks+p_lblock,*rblock=blocks+p_rblock;
     if(p_lblock==p_rblock){
         uint*p1=merge_ans.a-1,*p2=merge_ans.b-1;
         for(auto*i=sort_arr[p_lblock];*(ull*)i;++i){
-            if(i->p<=l)*(++p1)=i->v;
+            if(i->p<l)*(++p1)=i->v;
             if((i->p>=l)&(i->p<r))*(++p2)=i->v;
         }*(p1+1)=0,*(p2+1)=0;
-        return pre[r]-pre[l]-merge_ans.calc();
+        return pre[r-1]-(l==lblock->l?0:pre[l-1])-merge_ans.calc();
     }else{
         ull res=0;
-        res+=f[p_lblock+1][p_rblock];
+        res+=f[p_lblock+1][p_rblock]+suf[l]+(r==rblock->l?0:pre[r-1]);
         if(p_lblock+1!=p_rblock){
             auto&lsum=sum[p_lblock],&rsum=sum[p_rblock-1];
             for(uint*i=arr+l,*e=arr+lblock->r;i!=e;++i)res+=rsum[*i]-lsum[*i];
             res+=(rsum[n]-lsum[n])*(r-rblock->l);
-            for(uint*i=arr+rblock->r,*e=arr+r;i!=e;++i)res-=rsum[*i]-lsum[*i];
+            for(uint*i=arr+rblock->l,*e=arr+r;i!=e;++i)res-=rsum[*i]-lsum[*i];
         }
         uint*p1=merge_ans.a-1,*p2=merge_ans.b-1;
         for(auto*i=sort_arr[p_lblock];*(ull*)i;++i)if(i->p>=l)*(++p1)=i->v;*(p1+1)=0;
@@ -82,25 +92,25 @@ int main(){
         for(uint j=i->l;j<i->r;j++)sum_[arr[j]]++,sort_arr[i->id][j-i->l]={arr[j],j},p_block[j]=i->id;
         for(uint j=1;j<=n;j++)sum[i->id][j]=sum[i->id][j-1]+sum_[j];
         sort(sort_arr[i->id],sort_arr[i->id]+i->r-i->l,[](SortArr const&a,SortArr const&b){return a.v<b.v;});
-        for(uint j=i->l;j!=i->r;j++){
-            pre[j]=fenwick.query(0x1ffff-arr[j]);
+        for(uint j=i->l,sum=0;j!=i->r;j++){
+            pre[j]=(sum+=fenwick.query(0x1ffff-arr[j]));
             fenwick.add(0x1ffff-arr[j],1);
         }
         f[i->id][i->id+1]=pre[i->r-1];
         for(uint*j=arr+i->l,*e=arr+i->r;j!=e;j++)fenwick.add(0x1ffff-*j,-1);
-        for(int j=i->r-1;j>=(int)i->l;j--){
-            suf[j]=fenwick.query(arr[j]);
+        for(int j=i->r-1,sum=0;j>=(int)i->l;j--){
+            suf[j]=(sum+=fenwick.query(arr[j]));
             fenwick.add(arr[j],1);
         }
         for(uint*j=arr+i->l,*e=arr+i->r;j!=e;j++)fenwick.add(*j,-1);
     }
-    for(int len=1;len<=blocknum;len++)for(int i=0;i<blocknum-len;i++)
+    for(int len=2;len<=blocknum;len++)for(int i=0;i<=blocknum-len;i++)
         f[i][i+len]=f[i][i+len-1]+f[i+1][i+len]+merge_ans.calc(i,i+len-1)-f[i+1][i+len-1];
     while(m--){
         if constexpr(FORCE_ONLINE){
             static int a,b;read(a,b),a^=ans,b^=ans,l=min(a,b),r=max(a,b),l--;
         }else read(l,r),l--;
-        cout<<(ans=get_ans());
+        write_(ans=get_ans());
     }
     return 0;
 }
