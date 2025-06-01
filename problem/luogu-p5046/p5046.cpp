@@ -1,5 +1,4 @@
 #include <bits/stdc++.h>
-#include <sys/cdefs.h>
 using namespace std;
 constexpr bool FORCE_ONLINE=true;
 template<class T>inline void read_(T&t_)noexcept{
