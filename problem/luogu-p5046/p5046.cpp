@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <sys/cdefs.h>
 using namespace std;
 constexpr bool FORCE_ONLINE=true;
 template<class T>inline void read_(T&t_)noexcept{
@@ -19,7 +20,7 @@ template<class T>inline void write_(T t_)noexcept{
 using ll=long long;using ull=unsigned long long;
 using blockid=uint;using arrid=uint;
 constexpr ull hightbit(ull x)noexcept{return x?(1ull<<(63-__builtin_clzll(x))):(0);}
-constexpr uint maxn=1e5,maxblocknum=320,maxblocksize=320;
+constexpr uint maxn=1e5,maxblocknum=640,maxblocksize=320;
 constexpr uint maxn_pow2=hightbit(maxn)<<1,maxblocksize_pow2=hightbit(maxblocksize)<<1;
 int n,m,blocknum,blocksize,l,r;
 alignas(4096)uint arr[maxn+10],pre[maxn+10],suf[maxn+10],sum_[maxblocknum][1<<17],merge_ans_block[maxblocknum+10][maxblocknum+10];constexpr uint (*sum)[1<<17]=sum_;
@@ -83,7 +84,7 @@ inline ull get_ans()noexcept{
 }
 
 int main(){
-    read(n,m),blocksize=sqrt(n),blocknum=(n+blocksize-1)/blocksize,e_block=blocks+blocknum;
+    read(n,m),blocksize=sqrt(n)/2,blocknum=(n+blocksize-1)/blocksize,e_block=blocks+blocknum;
     for(int i=0;i<n;i++)read(arr[i]);
     for(uint i=0,cnt=0;cnt<n;i++,cnt+=blocksize)blocks[i]={i,cnt,cnt+blocksize};
     blocks[blocknum-1].r=n,blocks[blocknum]={(uint)blocknum,(uint)n,(uint)n},p_block[n]=blocknum;
