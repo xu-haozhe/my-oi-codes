@@ -3,45 +3,49 @@
 std::vector<int> ask(std::vector<int> a, std::vector<int> b);
 
 namespace sovle{
-
     using namespace ::std;
     int n,t,s;
-    inline int subtaask1()noexcept{
-        static vector<int>a,b;
-        static int cnt[1005];
+    inline int subtask1(){
+        static vector<int>a,b;a.clear(),b.clear();
+        static int cnt[1005];bzero(cnt,sizeof(cnt));
         for(int i=0;i<n;i++)for(int j=i+1;j<n;j++)a.push_back(i),b.push_back(j);
-        static vector<int>c=ask(move(a),move(b));
+        vector<int>c=ask(a,b);
         for(auto i:c)cnt[i]++;
-        for(auto i:cnt)if(i==n-1)return i;
+        for(int i=0;i<n;i++)if(cnt[i]==n-1)return i;
         return -1;
     }
-    inline int subtask2()noexcept{
-        constexpr int l[]={2,2,2,2,3,5,15,139};
-        static int all_[2][1000005],*e=all_[0],maxnum[1000005],cnt[1000005],*all=all_[0],*old=all_[1];
-        for(int i=0;i<n;i++)*(e++)=i;
-        for(auto a:l){
-            auto b=a+1,y=(int)(e-all)%a,x=(int)(e-all)/a-y,*p=all;
-            vector<int>va,vb;
-            for(int i=0;i<x;i++,p+=a)for(int j=0;j<a;j++){
-                maxnum[p[j]]=a-1;
-                for(int k=j+1;k<a;k++)va.push_back(p[j]),vb.push_back(p[k]);
+    template<class It>inline void add_to_ask_list(vector<int>&va,vector<int>&vb,int num[],It b,It e){
+        int n=e-b;
+        for(auto i=b;i!=e;i++){
+            num[*i]=n-1;
+            for(auto j=i+1;j!=e;j++){
+                va.push_back(*i),vb.push_back(*j);
             }
-            for(int i=0;i<y;i++,p+=b)for(int j=0;j<b;j++){
-                maxnum[p[j]]=b-1;
-                for(int k=j+1;k<b;k++)va.push_back(p[j]),vb.push_back(p[k]);
-            }
-            auto vc=ask(move(va),move(vb));
-            for(int *i=all;i!=e;i++)cnt[*i]=0;
-            for(auto i:vc)cnt[i]++;
-            int*p=old;
-            for(int*i=all;i!=e;i++)if(cnt[*i]==maxnum[*i])*(p++)=*i;
-            swap(old,all),e=p;
         }
     }
-    inline int sovle()noexcept{
-        if((n==1000)&&(s==1)&&(t==499500))return subtaask1();
+    inline vector<int>query(vector<int>arr,int m){
+        static int cnt[1000005],num[1000005];bzero(cnt,sizeof(cnt));bzero(num,sizeof(num));
+        static vector<int>va,vb,res;va.clear(),vb.clear(),res.clear();
+        int n=arr.size(),a=n/m,b=a+1,y=n%m,x=m-y;
+        auto it=arr.begin();
+        for(int i=0;i<x;i++)add_to_ask_list(va,vb,num,it,it+a),it+=a;
+        for(int i=0;i<y;i++)add_to_ask_list(va,vb,num,it,it+b),it+=b;
+        vector<int>c=ask(va,vb);
+        for(auto i:c)cnt[i]++;
+        for(auto i:arr)if(cnt[i]==num[i])res.push_back(i);
+        return res;
+    }
+    inline int subtask2()noexcept{
+        constexpr int l[]={500000,250000,125000,62500,20832,3472,183,1};
+        static vector<int>vec;vec.clear();
+        for(int i=0;i<n;i++)vec.push_back(i);
+        for(auto i:l)if(vec.size()>1)vec=query(vec,i);
+        return vec[0];
+    }
+    inline int sovle(){
+        if((n==1000)&&(t==1)&&(s==499500))return subtask1();
         if((n==1000000))return subtask2();
         return -1;
     }
 };
-inline int richest(int N,int T,int S)noexcept{sovle::n=N,sovle::t=T,sovle::s=S;;return sovle::sovle();};
+int richest(int N,int T,int S){sovle::n=N,sovle::t=T,sovle::s=S;;return sovle::sovle();};

@@ -1,23 +1,28 @@
+#pragma GCC optimize("Ofast")
+#pragma GCC optimize("unroll-loops")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,tune=native")
 #include<bits/stdc++.h>
 using namespace std;
 using ll=long long;
 inline constexpr ll num(ll x)noexcept{return x*(x-1)/2;}
+constexpr int N=1e6/16;
+ll dp[10][N+5];int arr[10][N+5];
 
-ll arr[10];ll M[8]={4,4,5,10,100,1000,1000,1000};
-inline bool dfs(ll r,ll x,int dep)noexcept{
-    assert(r>=0);
-    if(dep==8)return x<=1;
-    for(int i=2;i<=M[dep];i++){
-        auto b=x%i,a=x/i-b;
-        if(b*num(i+1)+a*num(i)>r)continue;
-        if(dfs(r-b*num(i+1)-a*num(i),a+b,dep+1))return arr[dep]=i,true; 
-    }
-    return false;
-}
 int main(){
-    bool ok=dfs(1099944,1000000+1,0);
-    if(ok){
-        for(int i=0;i<8;i++)cout<<arr[i]<<" \n"[i==7];
+    for(auto&i:dp)fill(i,i+N+1,1e18);
+    dp[8][1]=0;
+    for(int i=7;i>=4;i--){
+        for(int j=1;j<=N;j++){
+            for(int k=1;k<j;k++){
+                int a=j/k,b=a+1,y=j%k,x=k-y;
+                if(dp[i+1][k]+num(a)*x+num(b)*y<dp[i][j]){
+                    dp[i][j]=dp[i+1][k]+num(a)*x+num(b)*y;
+                    arr[i][j]=k;
+                }
+            }
+        }
     }
+    cout<<dp[4][N]<<endl;
+    for(int i=4,x=N;i<8;i++)cout<<(x=arr[i][x])<<",";
     return 0;
 }
