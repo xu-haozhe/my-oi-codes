@@ -8,7 +8,7 @@ template<class T>inline void read(T&t_)noexcept{
     while(isdigit(ch))t=t*10+ch-'0',ch=getchar();
     t_=t;[[assume(t_>=0)]];
 }
-template<class T,class ...Args>__always_inline void read(T&first,Args&...args)noexcept{read_(first);read(args...);}
+template<class T,class ...Args>__always_inline void read(T&first,Args&...args)noexcept{read(first);read(args...);}
 constexpr ll MIN=-1e16;
 struct alignas(8<<16) matrix256x256{ll a[256][256];}a,b;
 struct alignas(8<<8) vec256{ll a[256];};
@@ -26,7 +26,7 @@ inline void mul(vec256 &a,matrix256x256 &b,vec256 &c){
         for(int j=0;j<256;j++)arr2[j]=max(arr2[j],arr[j]+tmp);
     }
 }
-template<class T>struct matrix_{T d[2],*a=d,*b=d+1;inline void swap()noexcept{swap(a,b);};};
+template<class T>struct matrix_{T d[2],*a=d,*b=d+1;inline void swap()noexcept{::swap(a,b);};};
 inline void pow(matrix256x256 const &a,ll n,matrix_<matrix256x256> &c){
     matrix_<matrix256x256> tmp;
     memcpy(tmp.a,&a,sizeof(matrix256x256));
@@ -40,19 +40,21 @@ inline void pow(matrix256x256 const &a,ll n,matrix_<matrix256x256> &c){
         mul(*tmp.a,*tmp.a,*tmp.b),tmp.swap();
     }
 }
-int n,m,k,c[55];ll T,t,y,lstt;
+int n,m,k,c[55];ll lstt,T;
 matrix256x256 arr1;matrix_<matrix256x256>arr2;matrix_<vec256>vec;
+struct festival{ll t,x,y;friend bool operator<(festival const&a,festival const&b){return a.t<b.t;}}f[205];
 int main(){
     read(n,m,T,k);
     for(int i=0;i<n;i++)read(c[i]);
+    for(int i=0;i<k;i++)read(f[i].t,f[i].x,f[i].y);
+    sort(f,f+k);
     for(auto&i:arr1.a)for(auto&j:i)j=MIN;
     for(int u,v,w;m--;)read(u,v,w),arr1.a[u+w-2][v-1]=c[v-1];
     for(auto&i:vec.a->a)i=MIN;vec.a->a[0]=c[0];
-    for(int x;k--;){
-        read(t,x,y);
-        pow(arr1,t-lstt,arr2);
-        mul(*vec.a,*arr2.a,*vec.b),vec.swap();
-        if(vec.a->a[x-1]>0)vec.a->a[x-1]+=y;
+    for(int i=0;i<k;i++){
+        auto [t,x,y]=f[i];
+        if(t!=lstt)pow(arr1,t-lstt,arr2),mul(*vec.a,*arr2.a,*vec.b),vec.swap();
+        if(vec.a->a[x-1]>=0)vec.a->a[x-1]+=y;
         lstt=t;
     }
     pow(arr1,T-lstt,arr2);
