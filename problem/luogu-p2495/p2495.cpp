@@ -21,13 +21,13 @@ namespace input_tree{
 __always_inline unsigned char fastlog2(ll x)noexcept{return __builtin_ctzll(x);}
 inline int lca(int x,int y){
     if(dep[x]<dep[y])swap(x,y);
-    for(int i=dep[x]-dep[y];i;i&=i-1)x=fa[x][fastlog2(i&-i)];
+    for(int i=dep[x]-dep[y];i;i&=i-1)x=fa[x][fastlog2(i)];
     for(int i=19;i>=0;i--)if(fa[x][i]!=fa[y][i])x=fa[x][i],y=fa[y][i];
     return x==y?x:fa[x][0];
 }
 inline int getw(int f,int son){
     int res=INT_MAX;
-    for(int i=dep[son]-dep[f];i;i&=i-1)res=min(res,w[son][fastlog2(i&-i)]);
+    for(int i=dep[son]-dep[f];i;i&=i-1)res=min(res,w[son][fastlog2(i)]),son=fa[son][fastlog2(i)];
     return res;
 }
 bool is[maxn+5];
