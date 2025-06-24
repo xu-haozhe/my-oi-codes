@@ -38,38 +38,53 @@ namespace solve{
     template<tree&tr>void dfs(int p)noexcept{
         tr.hash[p]=hash_k;
         for(auto i:tr.son[p])dfs<tr>(i),tr.siz[p]+=tr.siz[i],tr.hash[p]+=xor_shift(tr.hash[i]);
+        tr.hash[p]*=tr.hash[p]*xor_shift(tr.hash[p]);
     }
     template<class T,class Fun>inline void vec_rm_if(vector<T>&vec,Fun&&f){vec.erase(remove_if(vec.begin(),vec.end(),f),vec.end());}
     __always_inline uint8_t lowbitlg2(uint8_t x)noexcept{return __builtin_ctz(x);}
-    template<class Fun>int check_each(uint8_t mask,uint8_t dep,Fun&&f){
-        if(!dep)return true;
-        for(uint8_t i=mask;i;i&=-i){
-            if(f(lowbitlg2(i),dep-1)&&check_each(mask^(i&-i),dep-1,f));
-        }
-    }
     int dfs(int p1,int p2,int m){
         if((tree1.siz[p1]<tree2.siz[p2])|(tree1.siz[p1]-tree2.siz[p2]>m))return 0xfffff;
-        map<ull,vector<int>::iterator>mp;
-        vector<int>&v1=tree1.son[p1],&v2=tree2.son[p2];
-        for(auto it=v1.begin();it!=v1.end();++it)mp.insert({tree1.hash[*it],it});
-        for(auto&i:v2){
-            auto it=mp.find(tree2.hash[i]);
-            if(it!=mp.end())i=0,*(it->second)=0;
+        if(p2==0)return tree1.siz[p1];
+        vector<int>v1,v2;
+        {
+        set<pair<ull,int>>s;
+        for(auto i:tree1.son[p1])s.insert({tree1.hash[i],i});
+        for(auto i:tree2.son[p2]){
+            auto it=s.lower_bound({tree2.hash[i],0});
+            if((it!=s.end())&&(it->first==tree2.hash[i]))s.erase(it);
+            else v2.push_back(i);
         }
-        vec_rm_if(v1,[](int x){return !x;}),vec_rm_if(v2,[](int x){return !x;});
-        if(v1.size()>k)return 0xfffff;
-        
+        for(auto i:s)v1.push_back(i.second);
+        }
+        int l=v1.size(),m_=1+l-m;
+        if(l==0)return 0;
+        if(l>m)return 0xfffff;
+        for(int i=l-v2.size();i;i--)v2.push_back(0);
+        vector<int>order(l);
+        for(int i=0;i<l;++i)order[i]=i;
+        int res=0xfffff;
+        do{
+            int tot=0;
+            for(int i=0;i<l;i++)if((tot+=dfs(v1[order[i]],v2[i],m_))>m)break;
+            res=min(res,tot);
+        }while(next_permutation(order.begin(),order.end()));
+        return res;
     }
     inline void sovel(){
+        hash_k=xor_shift();
         tree1.input(),tree2.input();
         dfs<tree1>(tree1.root),dfs<tree2>(tree2.root);
+        if(k==0){
+            if(tree1.hash[tree1.root]==tree2.hash[tree2.root])cout<<"Yes\n";else cout<<"No\n";
+            return;
+        }
+        if(dfs(tree1.root,tree2.root,k)<=k)cout<<"Yes\n";else cout<<"No\n";
     }
 };
 int main(){
     read(c,t,k);
-    assert(k==0);
     while(t--){
-
+        solve::sovel();
     }
     return 0;
 }
