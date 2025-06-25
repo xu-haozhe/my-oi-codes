@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include<bits/stdc++.h>
 #include<bits/extc++.h>
 using namespace std;
@@ -37,6 +38,7 @@ namespace solve{
     ull hash_k;
     template<tree&tr>void dfs(int p)noexcept{
         tr.hash[p]=hash_k;
+        tr.siz[p]=1;
         for(auto i:tr.son[p])dfs<tr>(i),tr.siz[p]+=tr.siz[i],tr.hash[p]+=xor_shift(tr.hash[i]);
         tr.hash[p]*=tr.hash[p]*xor_shift(tr.hash[p]);
     }
@@ -46,8 +48,8 @@ namespace solve{
         if((tree1.siz[p1]<tree2.siz[p2])|(tree1.siz[p1]-tree2.siz[p2]>m))return 0xfffff;
         if(p2==0)return tree1.siz[p1];
         vector<int>v1,v2;
-        {
-        set<pair<ull,int>>s;
+        
+        static set<pair<ull,int>>s;s.clear();
         for(auto i:tree1.son[p1])s.insert({tree1.hash[i],i});
         for(auto i:tree2.son[p2]){
             auto it=s.lower_bound({tree2.hash[i],0});
@@ -55,20 +57,21 @@ namespace solve{
             else v2.push_back(i);
         }
         for(auto i:s)v1.push_back(i.second);
-        }
-        int l=v1.size(),m_=1+l-m;
+        
+        int l=v1.size(),m_=1+m-l;
         if(l==0)return 0;
-        if(l>m)return 0xfffff;
+        if((l>m)|(l<v2.size()))return 0xfffff;
+        
         for(int i=l-v2.size();i;i--)v2.push_back(0);
-        vector<int>order(l);
-        for(int i=0;i<l;++i)order[i]=i;
+        v1.resize(l),v2.resize(l);
+        sort(v1.begin(),v1.end());
         int res=0xfffff;
         do{
             int tot=0;
-            for(int i=0;i<l;i++)if((tot+=dfs(v1[order[i]],v2[i],m_))>m)break;
+            for(int i=0;i<l;i++)if((tot+=dfs(v1[i],v2[i],m_))>m)break;
             res=min(res,tot);
-        }while(next_permutation(order.begin(),order.end()));
-        return res;
+        }while(next_permutation(v1.begin(),v1.end()));
+        return res<=m?res:0xfffff;
     }
     inline void sovel(){
         hash_k=xor_shift();
