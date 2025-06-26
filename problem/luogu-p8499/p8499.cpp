@@ -42,7 +42,6 @@ namespace solve{
         for(auto i:tr.son[p])dfs<tr>(i),tr.siz[p]+=tr.siz[i],tr.hash[p]+=xor_shift(tr.hash[i]);
         tr.hash[p]*=tr.hash[p]*xor_shift(tr.hash[p]);
     }
-    template<class T,class Fun>inline void vec_rm_if(vector<T>&vec,Fun&&f){vec.erase(remove_if(vec.begin(),vec.end(),f),vec.end());}
     __always_inline uint8_t lowbitlg2(uint8_t x)noexcept{return __builtin_ctz(x);}
     int dfs(int p1,int p2,int m){
         if((tree1.siz[p1]<tree2.siz[p2])|(tree1.siz[p1]-tree2.siz[p2]>m))return 0xfffff;
@@ -57,7 +56,6 @@ namespace solve{
             else v2.push_back(i);
         }
         for(auto i:s)v1.push_back(i.second);
-        
         int l=v1.size(),m_=1+m-l;
         if(l==0)return 0;
         if((l>m)|(l<v2.size()))return 0xfffff;
